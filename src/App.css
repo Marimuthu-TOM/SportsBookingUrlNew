@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+/* =========================
+   GLOBAL SCROLLBAR
+========================= */
+
+/* Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #F49C7A #d1d5db;
+}
+
+/* Chrome / Edge / Safari */
+*::-webkit-scrollbar {
+    width: 10px;
+    /* vertical */
+    height: 10px;
+    /* horizontal */
+}
+
+/* 🔥 REMOVE ALL SCROLLBAR ARROWS */
+*::-webkit-scrollbar-button {
+    display: none !important;
+    width: 0;
+    height: 0;
+}
+
+/* ALSO REMOVE SINGLE-BUTTON CASES */
+*::-webkit-scrollbar-button:single-button {
+    display: none !important;
+}
+
+/* Track */
+*::-webkit-scrollbar-track {
+    background: #d1d5db;
+    border-radius: 25px;
+}
+
+/* Thumb */
+*::-webkit-scrollbar-thumb {
+    background-color: #F49C7A;
+    border-radius: 10px;
+}
+
+/* Hover */
+*::-webkit-scrollbar-thumb:hover {
+    background-color: #510f30;
+}
