@@ -6,28 +6,33 @@ import NamesInlinePopup from "../components/NamesPopup";
 import moment from "moment";
 import InlineChipsPopup from "../components/InlineChipsPopup";
 import leftArrow from "./../assets/leftArrow.png";
+import promoCodeicon from "./../assets/promo_code_member_app.svg";
 import { useNavigate } from "react-router-dom";
 import { promoCodeValidation } from "../services/endpointService";
 
 export default function BookingConfirmation() {
     const { vendorData, selectedPackage, selectedUser, selectedDate } = useAppStore();
     const navigate = useNavigate();
+    const [paymentOption, setPaymentOption] = useState(false);
     const [showPopup, setShowPopup] = useState(false);
     const [feeAmt, setFeeAmt] = useState(null);
+    const [billingAmt, setBillingAmt] = useState(null);
     const [activePopup, setActivePopup] = useState(null);
     const [selectingUsers, setSelectingUsers] = useState([]);
     const [promoCode, setPromoCode] = useState("");
+    const [promoCodeAmt, setPromoCodeAmt] = useState("");
+    const [isPromo, setIsPromo] = useState(true);
     const dateRef = useRef(null);
     const nameRowRef = useRef(null);
 
     useEffect(() => {
         feeAmtCalculate();
-        promoCodeValidate();
     }, []);
 
 
     const feeAmtCalculate = () => {
         const amt = selectedUser?.length * selectedPackage?.trcr_cost;
+        setBillingAmt(amt);
         setFeeAmt(amt);
     };
 
@@ -39,20 +44,30 @@ export default function BookingConfirmation() {
 
     const promoCodeValidate = async () => {
         const requestData = {
-            "p_coupon_code": "TOM027",
+            "p_coupon_code": promoCode,
             "p_member_id": "103",
             "p_module_id": 7,
-            "p_vendor_id": "293",
-            "p_current_date": "2025-12-29 19:44:49"
+            "p_vendor_id": "1333",
+            "p_current_date": moment(new Date()).format("YYYY-MM-DD HH:MM:ss")
         }
 
         const response = await promoCodeValidation(requestData);
+        const responseData = response.data[0];
+        if (responseData.status == 1) {
+            if (responseData.discount_option === "Percentage") {
+                const discountCost = (selectedPackage?.trcr_cost * responseData?.discount_value) / 100;
+                setPromoCodeAmt(discountCost);
+                setBillingAmt(feeAmt - discountCost);
+                setIsPromo(false);
+            } else {
+                setPromoCodeAmt(responseData?.discount_value);
+                setBillingAmt(feeAmt - responseData?.discount_value);
+                setIsPromo(false);
+            }
+        } else {
+            setBillingAmt(feeAmt);
+        }
         console.log("Vendor Data:", response.data[0]);
-
-
-    };
-    const handleApply = () => {
-        console.log("Applied Promo Code:", promoCode);
     };
 
 
@@ -143,36 +158,31 @@ export default function BookingConfirmation() {
                             />
                         )}
 
-                        {/* Promo Code */}
-                        <div className="flex items-center gap-2 mt-4">
-                            {/* <div className="flex-1 border rounded-lg px-3 py-2 text-sm flex items-center gap-2">
-                                <span>🏷️</span>
-                                <input
-                                    placeholder="Promo Code"
-                                    className="w-full outline-none"
-                                />
-                            </div>
-                            <button className="bg-[#510f30] text-white px-4 py-2 rounded-lg text-sm">
-                                Apply
-                            </button> */}
-                        </div>
-                        <PromoCodeInput
-                            value={promoCode}
-                            onChange={setPromoCode}
-                            onApply={handleApply}
-                        />
+                        {isPromo == true &&
+                            <PromoCodeInput
+                                value={promoCode}
+                                onChange={setPromoCode}
+                                onApply={promoCodeValidate}
+                            />
+                        }
                     </div>
                     <div className="shadow-sm border border-b-0 border-[#E5E8E5] rounded-xl mt-4 pt-4">
                         {/* Fee */}
-                        <div className="flex justify-between mt-4 px-4 text-sm">
+                        <div className="flex justify-between py-2 px-4 text-sm">
                             <span className="text-[#510f30] font-semibold">Fee <span className="text-[8px] font-semibold">KWD</span></span>
                             <span className="text-pink-500 font-semibold">{feeAmt}</span>
                         </div>
+                        {isPromo == false &&
+                            < div className="flex justify-between py-2 px-4 text-sm">
+                                <span className="text-[#510f30] font-semibold flex">Promo Code <img src={promoCodeicon} alt="promoCodeicon" className="pl-2" /></span>
+                                <span className="text-pink-500 font-semibold">{promoCodeAmt}</span>
+                            </div>
+                        }
 
                         {/* Billing */}
                         <div className="flex justify-between mt-2 bg-[#F9E1D9] p-3 rounded-xl text-sm font-semibold">
                             <span className="text-[#510f30] font-semibold">Billing Amount <span className="text-[8px] font-semibold">KWD</span></span>
-                            <span className="text-pink-500">180.00</span>
+                            <span className="text-pink-500">{billingAmt}</span>
                         </div>
                     </div>
 
@@ -190,12 +200,12 @@ export default function BookingConfirmation() {
                 </div>
 
                 {/* Pay Button */}
-                <button className="w-full bg-[#510f30] text-white py-3 rounded-full font-semibold">
+                <button onClick={() => setPaymentOption(true)} className="w-full bg-[#510f30] text-white py-3 rounded-full font-semibold">
                     Pay now
                 </button>
 
                 <ChoosePaymentMethodModal
-                    isOpen={false}
+                    isOpen={paymentOption}
                     onClose={() => setOpen(false)}
                 />
 
@@ -219,7 +229,7 @@ export default function BookingConfirmation() {
                 )}
             </div>
 
-        </div>
+        </div >
     );
 }
 
@@ -243,29 +253,30 @@ const PromoCodeInput = ({ value, onChange, onApply }) => {
     return (
         <div className="flex items-center gap-3 w-full max-w-xl">
             {/* Icon + Label */}
-            <div className="flex items-center gap-2 text-[#510f30] font-semibold text-sm whitespace-nowrap">
-                <span className="text-lg">🏷️</span>
+            <div className="flex items-center gap-2 w-[40%] text-[#510f30] font-semibold text-sm whitespace-nowrap">
+                <span className="text-lg"></span>
+                <img src={promoCodeicon} alt="promoCodeicon" />
                 Promo Code
             </div>
 
             {/* Input + Button Wrapper */}
-            <div className="flex items-center w-full bg-white rounded-full shadow-md overflow-hidden">
+            <div className="flex items-center w-[60%] bg-white rounded-full shadow-md overflow-hidden">
                 {/* Input */}
                 <input
                     type="text"
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
                     placeholder="Enter code"
-                    className="flex-1 px-5 py-3 text-sm outline-none text-[#510f30] w-[60px]"
+                    className="flex-1 px-5 py-3 text-sm outline-none text-[#510f30] w-[50px]"
                 />
 
                 {/* Apply Button */}
-                <button
+                <div
                     onClick={onApply}
                     className="px-2 py-3 bg-[#510f30] text-white text-sm font-semibold hover:bg-[#3f0c25] transition-all w-[60px]"
                 >
                     Apply
-                </button>
+                </div>
             </div>
         </div>
     );
