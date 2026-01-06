@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { promoCodeValidation } from "../services/endpointService";
 
 export default function BookingConfirmation() {
-    const { vendorData, selectedPackage, selectedUser, selectedDate } = useAppStore();
+    const { vendorData, selectedPackage, selectedUser, selectedDate, dealValue, dealId, setPromoCodeDetails } = useAppStore();
     const navigate = useNavigate();
     const [paymentOption, setPaymentOption] = useState(false);
     const [showPopup, setShowPopup] = useState(false);
@@ -24,15 +24,33 @@ export default function BookingConfirmation() {
     const [isPromo, setIsPromo] = useState(true);
     const dateRef = useRef(null);
     const nameRowRef = useRef(null);
+    const bookingPayload = {
+        billingAmt,
+        promoCode,
+        promoCodeAmt,
+        selectedUser,
+        selectedDate,
+        selectedPackage,
+        vendorData,
+        dealId
+    };
+
 
     useEffect(() => {
+        console.log("Deal Value:", dealValue);
+        console.log("Deal ID:", dealId);
         feeAmtCalculate();
     }, []);
 
 
     const feeAmtCalculate = () => {
         const amt = selectedUser?.length * selectedPackage?.trcr_cost;
-        setBillingAmt(amt);
+        if (dealId) {
+            const discountedAmt = amt - dealValue;
+            setBillingAmt(discountedAmt);
+        } else {
+            setBillingAmt(amt);
+        }
         setFeeAmt(amt);
     };
 
@@ -42,10 +60,14 @@ export default function BookingConfirmation() {
         );
     };
 
+    const toSendPaymentModal = () => {
+        setPaymentOption(true);
+    };
+
     const promoCodeValidate = async () => {
         const requestData = {
             "p_coupon_code": promoCode,
-            "p_member_id": "103",
+            "p_member_id": "1494",
             "p_module_id": 7,
             "p_vendor_id": "1333",
             "p_current_date": moment(new Date()).format("YYYY-MM-DD HH:MM:ss")
@@ -53,19 +75,20 @@ export default function BookingConfirmation() {
 
         const response = await promoCodeValidation(requestData);
         const responseData = response.data[0];
+        setPromoCodeDetails(responseData);
         if (responseData.status == 1) {
             if (responseData.discount_option === "Percentage") {
                 const discountCost = (selectedPackage?.trcr_cost * responseData?.discount_value) / 100;
                 setPromoCodeAmt(discountCost);
-                setBillingAmt(feeAmt - discountCost);
+                setBillingAmt(billingAmt - discountCost);
                 setIsPromo(false);
             } else {
                 setPromoCodeAmt(responseData?.discount_value);
-                setBillingAmt(feeAmt - responseData?.discount_value);
+                setBillingAmt(billingAmt - responseData?.discount_value);
                 setIsPromo(false);
             }
         } else {
-            setBillingAmt(feeAmt);
+            setBillingAmt(billingAmt);
         }
         console.log("Vendor Data:", response.data[0]);
     };
@@ -172,6 +195,14 @@ export default function BookingConfirmation() {
                             <span className="text-[#510f30] font-semibold">Fee <span className="text-[8px] font-semibold">KWD</span></span>
                             <span className="text-pink-500 font-semibold">{feeAmt}</span>
                         </div>
+
+                        {dealId &&
+                            < div className="flex justify-between py-2 px-4 text-sm">
+                                <span className="text-[#510f30] font-semibold">Deal</span>
+                                <span className="text-pink-500 font-semibold">{dealValue}</span>
+                            </div>
+                        }
+
                         {isPromo == false &&
                             < div className="flex justify-between py-2 px-4 text-sm">
                                 <span className="text-[#510f30] font-semibold flex">Promo Code <img src={promoCodeicon} alt="promoCodeicon" className="pl-2" /></span>
@@ -200,13 +231,14 @@ export default function BookingConfirmation() {
                 </div>
 
                 {/* Pay Button */}
-                <button onClick={() => setPaymentOption(true)} className="w-full bg-[#510f30] text-white py-3 rounded-full font-semibold">
+                <button onClick={() => toSendPaymentModal()} className="w-full bg-[#510f30] text-white py-3 rounded-full font-semibold">
                     Pay now
                 </button>
 
                 <ChoosePaymentMethodModal
                     isOpen={paymentOption}
                     onClose={() => setOpen(false)}
+                    bookingData={bookingPayload}
                 />
 
                 {showPopup && (

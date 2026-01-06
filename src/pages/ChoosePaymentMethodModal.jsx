@@ -1,11 +1,57 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import MasterCardIcon from "./../assets/MasterCardNewIcon.svg";
 import KnetIcom from "./../assets/KnetNewIcom.svg";
+import moment from "moment";
+import useAppStore from "../store/useAppStore";
+import { insertBooking } from "../services/endpointService";
 
-export default function ChoosePaymentMethodModal({ isOpen, onClose }) {
+export default function ChoosePaymentMethodModal({ isOpen, onClose, bookingData }) {
+    const { vendorData, selectedPackage, selectedUser, selectedDate, workingHoursDetails, promoCodeDetails } = useAppStore();
     const [method, setMethod] = useState("card");
 
     if (!isOpen) return null;
+
+    const submitInsertBooking = async () => {
+        const patientIds = selectedUser.map(item => item.patientid);
+        const names = selectedUser.map(item => item.name);
+        const fromDate = selectedDate[0];
+        const toDate = selectedDate[selectedDate.length - 1];
+
+        console.log("bookingData Dates:", bookingData);
+        const bookingPayload = {
+            "patientId": "118",
+            "trainingCenterId": vendorData?.id || "",
+            "packageId": selectedPackage?.packageId || "",
+            "fromDate": fromDate,
+            "toDate": toDate,
+            "bookedDate": moment(new Date()).format("YYYY-MM-DD HH:MM:ss"),
+            "amount": bookingData?.billingAmt || "",
+            "paymentStatus": "1",
+            "paymentType": "2",
+            "isMember": 2,
+            "tempMemberName": names?.join(','),
+            "dealid": selectedPackage?.dealId || "",
+            "dealoption": selectedPackage?.dealOption || "",
+            "dealvalue": selectedPackage?.dealValue || "",
+            "paymentGatewayName": method === "knet" ? "KNET" : "MASTERCARD",
+            "membersInvolved": patientIds?.join(','),
+            "Selected_dates": selectedDate?.join(','),
+            "Selected_time": JSON.stringify(workingHoursDetails),
+            "waitingListId": 0,
+            "p_family_promo_id": promoCodeDetails?.is_family_promo ? promoCodeDetails?.id : '',
+            "p_general_promo_id": promoCodeDetails?.is_general_promo ? promoCodeDetails?.id : '',
+            "p_celebrity_promo_id": promoCodeDetails?.is_celebrity_promo ? promoCodeDetails?.id : '',
+            "paymentid": "100600520000001424",
+            "referenceid": "600520000157329",
+            "order_id": "tomwwkczh18ypf"
+        }
+
+        console.log(bookingPayload);
+
+        const response = await insertBooking(bookingPayload);
+        console.log("Insert Booking Response:", response.data[0]);
+
+    };
 
     return (
         <div className="fixed inset-0 z-50 flex items-end bg-black/40">
@@ -39,7 +85,7 @@ export default function ChoosePaymentMethodModal({ isOpen, onClose }) {
                 </div>
 
                 {/* Continue Button */}
-                <button className="w-full bg-[#510f30] text-white py-3 rounded-full font-semibold">
+                <button onClick={() => submitInsertBooking()} className="w-full bg-[#510f30] text-white py-3 rounded-full font-semibold">
                     Continue to Pay
                 </button>
             </div>

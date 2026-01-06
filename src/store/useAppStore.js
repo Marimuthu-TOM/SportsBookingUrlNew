@@ -4,6 +4,10 @@ import { devtools } from "zustand/middleware";
 const useAppStore = create(
     devtools((set, get) => ({
         selectedDate: null,
+        dealValue: null,
+        dealId: null,
+        workingHoursDetails: null,
+        promoCodeDetails: null,
         availableDates: [],
         packages: [],
         vendorData: null,
@@ -21,6 +25,18 @@ const useAppStore = create(
 
         setSelectedDate: (date) =>
             set({ selectedDate: date }, false, "setSelectedDate"),
+
+        setDealValue: (date) =>
+            set({ dealValue: date }, false, "setDealValue"),
+
+        setPromoCodeDetails: (date) =>
+            set({ promoCodeDetails: date }, false, "setPromoCodeDetails"),
+
+        setDealId: (date) =>
+            set({ dealId: date }, false, "setDealId"),
+
+        setWorkingHoursDetails: (date) =>
+            set({ workingHoursDetails: date }, false, "setWorkingHoursDetails"),
 
         setAvailableDates: (dates) =>
             set({ availableDates: dates }, false, "setAvailableDates"),

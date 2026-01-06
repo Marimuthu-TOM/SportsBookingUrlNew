@@ -9,6 +9,8 @@ import moment from "moment/moment";
 import CustomCalendar from "../components/CustomCalendar";
 import NamesPopup from "../components/NamesPopup";
 import Check from "../assets/check.png";
+import dealicon from "../assets/dealicon.svg";
+import tom_deal_icons from "../assets/tom_deal_icons.png";
 import InlineChipsPopup from "../components/InlineChipsPopup";
 import AvatarSelector from "../components/AvatarSelector";
 import useAppStore from "../store/useAppStore";
@@ -16,12 +18,13 @@ import { useNavigate } from "react-router-dom";
 
 
 export default function VendorProfilePage() {
-    const { selectPackage, selectedPackage, selectedUser, setSelectedUser, setVendorData, setSelectedDate } = useAppStore();
+    const { selectPackage, selectedPackage, selectedUser, setSelectedUser, setVendorData, setSelectedDate, setWorkingHoursDetails, setDealValue, setDealId } = useAppStore();
     const navigate = useNavigate();
     const [guardianInfo, setGuardianInfo] = useState(false);
     const [showPopup, setShowPopup] = useState(false);
     const [isPackageSelected, setIsPackageSelected] = useState(false);
     const [packageList, setPackageList] = useState([]);
+    const [sportsDetails, setSportsDetais] = useState([]);
     const [workingHours, setWorkingHours] = useState([]);
     const [selectingDates, setSelectingDates] = useState([]);
     const [vendorDetails, setVendorDetails] = useState([]);
@@ -52,7 +55,7 @@ export default function VendorProfilePage() {
     const getSportsAcademyData = async () => {
         try {
             const payloadData = {
-                "trainingCenterId": "1333",
+                "trainingCenterId": "495",
                 "trainingId": "2",
                 "currentDate": moment(new Date()).format("YYYY-MM-DD"),
                 "patientId": "118",
@@ -61,7 +64,9 @@ export default function VendorProfilePage() {
             }
             const response = await getVendorWorkingHoursAndPackageDetails(payloadData);
             console.log("Vendor Data:", response.data[0]);
+            setSportsDetais(response.data[0]);
             setPackageList(response.data[0]?.programList || []);
+            setWorkingHoursDetails(response.data[0]?.trainingCenterWorkinghours || []);
             setWorkingHours(response.data[0]?.trainingCenterWorkinghours || []);
         } catch (error) {
             console.log("error:", error);
@@ -112,9 +117,23 @@ export default function VendorProfilePage() {
             .join(", ");
     };
 
+    const selectedPackageWlFun = (pkg) => {
+        setSelectingPackage(pkg);
+        selectPackage(pkg);
+        setDealId(pkg.dealId);
+        navigate("/questionnarie");
+    };
+
     const selectedPackageFun = (pkg) => {
         setSelectingPackage(pkg);
         selectPackage(pkg);
+        setDealId(pkg.dealId);
+        if (pkg.dealOption == "Percentage") {
+            const discountCost = (pkg.trcr_cost * pkg.dealValue) / 100;
+            setDealValue(discountCost);
+        } else {
+            setDealValue(pkg.dealValue);
+        }
         setIsPackageSelected(true);
     };
 
@@ -199,6 +218,13 @@ export default function VendorProfilePage() {
                                 sessions={pkg.trcr_session}
                                 price={pkg.trcr_cost}
                                 onSelect={() => selectedPackageFun(pkg)}
+                                deal_active={pkg.deal_active}
+                                deal_icon={pkg.tom_or_sp == 2 || (pkg.deal_active == 1 && pkg.tom_or_sp == 0) ? dealicon : tom_deal_icons}
+                                dealOption={pkg.dealOption}
+                                dealValue={pkg.dealValue}
+                                dealId={pkg.dealId}
+                                isWitingList={sportsDetails?.waiting_list}
+                                applyWaitingList={() => selectedPackageWlFun(pkg)}
                             />
                         ))}
 

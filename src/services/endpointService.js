@@ -23,6 +23,14 @@ export const promoCodeValidation = (payload) => {
     return apiPost('admin/validateGeneralCouponCode', payload)
 }
 
+export const insertBooking = (payload) => {
+    return apiPost('Patient/urlSportsPatientTrainingCenterBooking', payload)
+}
+
+export const paymentSuccessDetails = (payload) => {
+    return apiPost('Patient/getTrcrPaymentSuccessDetails', payload)
+}
+
 // ============ Export all endpoints ============
 
 export default {
@@ -37,4 +45,8 @@ export default {
     getPatientDetails,
 
     promoCodeValidation,
+
+    insertBooking,
+
+    paymentSuccessDetails,
 }
