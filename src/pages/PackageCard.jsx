@@ -42,9 +42,12 @@ export default function PackageCard({
           <img src={logo} alt="logo" className="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover" />
           <h3 className="text-base md:text-lg font-bold text-[#510f30]">{title}</h3>
         </div>
-        <div>
-          <button onClick={onSelect}
-            className="px-3 bg-[#FF0068] text-[#FFFFFF] font-semibold py-1 rounded-md text-sm">Fully Booked</button></div>
+        {isWitingList == 1 &&
+          <div>
+            <button onClick={onSelect}
+              className="px-3 bg-[#FF0068] text-[#FFFFFF] font-semibold py-1 rounded-md text-sm">Fully Booked</button>
+          </div>
+        }
         {deal_active && (<img src={deal_icon} alt="logo" className="w-8 h-8 md:w-14 md:h-14 rounded-full object-cover" />)}
       </div>
 

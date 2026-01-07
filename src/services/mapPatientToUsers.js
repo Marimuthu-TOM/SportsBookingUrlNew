@@ -5,6 +5,8 @@ function mapPatientToUsers(apiResponse) {
         patientid: `${patient.patientId}`,
         name: patient.name?.trim(),
         image: patient.profile_image,
+        age: patient.age,
+        phone_no: patient.phone_no,
         type: "main",
     };
 
@@ -12,6 +14,8 @@ function mapPatientToUsers(apiResponse) {
         patientid: `${m.PatientMemberId}`,
         name: m.name,
         image: m.patientMemberImage,
+        age: m.age,
+        phone_no: patient.phone_no,
         type: "sub",
     }));
 

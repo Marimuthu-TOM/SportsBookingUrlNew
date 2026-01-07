@@ -1,9 +1,10 @@
 // Get API base URL from environment or window location
 const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost'
 
-const apiUrl = isLocalhost
-  ? 'https://gateway.stage.theonemoment.co/'
-  : 'https://gateway.theonemoment.co/'
+const apiUrl = 'https://gateway.stage.theonemoment.co/'
+// const apiUrl = isLocalhost
+//   ? 'https://gateway.stage.theonemoment.co/'
+//   : 'https://gateway.theonemoment.co/'
 
 // Generic HTTP request handler
 const apiRequest = async (endpoint, method = 'GET', data = null, headers = {}) => {

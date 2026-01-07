@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useRef } from "react";
-import { paymentSuccessDetails } from "../services/endpointService";
+import { paymentSuccessDetails, insertBooking } from "../services/endpointService";
 import moment from "moment";
 import promoCodeicon from "./../assets/promo_code_member_app.svg";
 import MasterCardIcon from "./../assets/MasterCardNewIcon.svg";
@@ -8,22 +8,97 @@ import KnetIcom from "./../assets/KnetNewIcom.svg";
 import tomIcon from "./../assets/Group 21152 (1).png";
 import sucess from "./../assets/sucess.svg";
 import tom_deal_icons from "../assets/tom_deal_icons.png";
+import useAppStore from "../store/useAppStore";
+import { useSearchParams } from "react-router-dom";
 
 
 
 export default function PaymentSuccess() {
+  const { vendorData, selectedPackage, selectedUser, selectedDate, workingHoursDetails, promoCodeDetails } = useAppStore();
+  const [searchParams] = useSearchParams();
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [totalAmt, setTotalAmt] = useState(null);
+  const [insertId, setInsertId] = useState(null);
+  const result = searchParams.get("result");
+  const decryptKey = "NX706H5HECB8W336";
 
   useEffect(() => {
-    getPaymentSuccessDetails();
+    debugger
+
+    if (result && result != "") {
+      const resultData = result.replace(/p1L2u3S/g, '+').replace(/s1L2a3S4h/g, '/').replace(/e1Q2u3A4l/g, '=')
+      let response_data = decrypt(resultData, decryptKey);
+      if (response_data != "") {
+        response_data = response_data.split("&")
+        // Creating a dictionary to store key-value pairs
+        const dataObj = {};
+        // Populating the dictionary with key-value pairs
+        response_data.forEach(pair => {
+          const [key, value] = pair.split('=');
+          dataObj[key] = value;
+        });
+
+        if (dataObj.result == "CAPTURED") {
+          let requestdata = {
+            paymentid: dataObj['paymentid'],
+            result: dataObj['result'],
+            auth: dataObj['auth'],
+            avr: dataObj['avr'],
+            ref: dataObj['ref'],
+            tranid: dataObj['tranid'],
+            postdate: dataObj['postdate'],
+            trackid: dataObj['trackid'],
+            udf1: dataObj['udf1'],
+            udf2: dataObj['udf2'],
+            udf3: dataObj['udf3'],
+            udf4: dataObj['udf4'],
+            udf5: dataObj['udf5'],
+            amt: dataObj['amt']
+          }
+          console.log("requestdata", requestdata);
+          const storedPayload = JSON.parse(sessionStorage.getItem("bookingPayload"));
+          if (storedPayload) {
+            const updatedPayload = {
+              ...storedPayload,
+              paymentid: requestdata.paymentid,
+              referenceid: requestdata.tranid,
+            };
+            console.log(updatedPayload)
+            inserPaymentDetails(updatedPayload);
+          }
+        }
+      }
+    }
+    console.log(selectedPackage);
+
   }, []);
 
+  const decrypt = (data, termResourceKey) => {
+    const decodedData = atob(data);
+    let result = '';
+    const keyLength = termResourceKey.length;
+    for (let i = 0; i < decodedData.length; i++) {
+      const char = decodedData[i];
+      const keyChar = termResourceKey[i % keyLength];
+      result += String.fromCharCode(char.charCodeAt(0) - keyChar.charCodeAt(0));
+    }
+    return result;
+  }
 
-  const getPaymentSuccessDetails = async () => {
+
+
+  const inserPaymentDetails = async (updatedPayload) => {
+    const response = await insertBooking(updatedPayload);
+    setInsertId(response.data[0]?.insertId)
+    console.log("Insert Booking Response:", response.data[0]);
+    sessionStorage.clear();
+    getPaymentSuccessDetails(response.data[0]?.insertId);
+  }
+
+  const getPaymentSuccessDetails = async (iId) => {
     try {
       const payloadData = {
-        "bookingId": "875"
+        "bookingId": iId
       }
       const response = await paymentSuccessDetails(payloadData);
       setPaymentDetails(response.data[0]);

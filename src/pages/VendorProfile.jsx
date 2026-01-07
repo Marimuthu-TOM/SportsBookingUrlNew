@@ -55,7 +55,7 @@ export default function VendorProfilePage() {
     const getSportsAcademyData = async () => {
         try {
             const payloadData = {
-                "trainingCenterId": "495",
+                "trainingCenterId": "1333",
                 "trainingId": "2",
                 "currentDate": moment(new Date()).format("YYYY-MM-DD"),
                 "patientId": "118",

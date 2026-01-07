@@ -31,6 +31,22 @@ export const paymentSuccessDetails = (payload) => {
     return apiPost('Patient/getTrcrPaymentSuccessDetails', payload)
 }
 
+export const getPackageQuestions = (payload) => {
+    return apiPost('Patient/getSportsPackageQuestions', payload)
+}
+
+export const addWaitingListQuesAndAns = (payload) => {
+    return apiPost('Patient/sportsAddWaitingList', payload)
+}
+
+export const waitingListSuccessDetails = (payload) => {
+    return apiPost('Patient/getWaitingListScuuessDetail', payload)
+}
+
+export const viewWaitingListDetails = (payload) => {
+    return apiPost('Patient/getWaitingListIndDetail', payload)
+}
+
 // ============ Export all endpoints ============
 
 export default {
@@ -49,4 +65,12 @@ export default {
     insertBooking,
 
     paymentSuccessDetails,
+
+    getPackageQuestions,
+
+    addWaitingListQuesAndAns,
+
+    waitingListSuccessDetails,
+    
+    viewWaitingListDetails
 }
